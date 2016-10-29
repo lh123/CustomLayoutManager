@@ -123,9 +123,16 @@ public class HiveLayoutManager extends RecyclerView.LayoutManager {
             }
         }
         if (contentHeight < windowsHeight) {
-            mState.mViewRect.offset(0, -mState.mOffsetY);
-            mState.mOffsetY = 0;
-            mState.mLastOffsetY = 0;
+            if (mState.mContentRect.bottom > mState.mViewRect.bottom) {
+                float diff = mState.mViewRect.bottom - mState.mContentRect.bottom;
+                mState.mViewRect.offset(0, -diff);
+                mState.mOffsetY -= diff;
+                mState.mLastOffsetY = 0;
+            }else {
+                mState.mViewRect.offset(0, -mState.mOffsetY);
+                mState.mOffsetY = 0;
+                mState.mLastOffsetY = 0;
+            }
         } else {
             if (mState.mContentRect.bottom < mState.mViewRect.bottom) {
                 float diff = mState.mViewRect.bottom - mState.mContentRect.bottom;
@@ -166,18 +173,18 @@ public class HiveLayoutManager extends RecyclerView.LayoutManager {
         int floorIndex = mTempHiveInfo.mFloorIndex;
         int floorPosition = mTempHiveInfo.mPosition;
         float commonHorizontalSpace = floorCount * mHiveLenght * 2 - mHiveLenght;
-        float commonVerticalSpace = commonHorizontalSpace - floorIndex * mHiveLenght / 4f;
+        float commonVerticalSpace = (float) (mHiveLenght + floorIndex * mHiveLenght * Math.sqrt(3));
         float edgeLeftSpace = commonHorizontalSpace;
         float edgeBottomSpace = commonVerticalSpace;
         float edgeTopSpace = commonVerticalSpace;
         if (floorPosition < floorIndex) {
-            edgeBottomSpace -= 7 * mHiveLenght / 4f;
+            edgeBottomSpace -= Math.sqrt(3) * mHiveLenght;
         }
         if (floorPosition < 3 * floorIndex) {
             edgeLeftSpace -= Math.min(3 * floorIndex - floorPosition, 2) * mHiveLenght;
         }
         if (floorPosition < 4 * floorIndex) {
-            edgeTopSpace -= 7 * mHiveLenght / 4f;
+            edgeTopSpace -= Math.sqrt(3) * mHiveLenght;
         }
         float x = mAnchorPoint.x;
         float y = mAnchorPoint.y;
@@ -226,6 +233,7 @@ public class HiveLayoutManager extends RecyclerView.LayoutManager {
         if (viewBottom - viewTop >= edgeBottom - edgeTop) {
             return 0;
         }
+
         if (viewTop + willScroll < edgeTop) {
             willScroll = edgeTop - viewTop;
         } else if (viewBottom + willScroll > edgeBottom) {
@@ -359,7 +367,7 @@ public class HiveLayoutManager extends RecyclerView.LayoutManager {
     private void initAnchorInfo(RecyclerView.Recycler recycler) {
         if (mAnchorPoint == null) {
             mAnchorPoint = new PointF();
-            mAnchorPoint.set(getWidth() / 2f, getHeight() / 2f);
+            mAnchorPoint.set(getHorizontallSpace() / 2f, getVerticalSpace() / 2f);
             View view = recycler.getViewForPosition(0);
             addView(view);
             measureChildWithMargins(view, 0, 0);
